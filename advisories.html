@@ -815,8 +815,10 @@
       setThemeMode(document.documentElement.dataset.theme || 'dark');
 
       const mapSelection = new URLSearchParams(location.search);
-      const mapLat = Number(mapSelection.get('lat'));
-      const mapLon = Number(mapSelection.get('lon'));
+      const rawMapLat = mapSelection.get('lat');
+      const rawMapLon = mapSelection.get('lon');
+      const mapLat = rawMapLat === null || rawMapLat.trim() === '' ? NaN : Number(rawMapLat);
+      const mapLon = rawMapLon === null || rawMapLon.trim() === '' ? NaN : Number(rawMapLon);
       if (Number.isFinite(mapLat) && Number.isFinite(mapLon) && Math.abs(mapLat) <= 90 && Math.abs(mapLon) <= 180) {
         const place = mapSelection.get('place') || 'selected map location';
         input.value = place;
