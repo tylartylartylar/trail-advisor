@@ -26,4 +26,4 @@ GitHub Actions publishes the repository root to GitHub Pages when changes land o
 - Data endpoint URLs and trail querying/rendering are in the script of `explorer.html`.
 - Theme tokens and responsive map layout are in the page-level styles in `explorer.html` and `advisories.html`.
 - Public source terms, freshness, and coverage constraints are summarized in [data-sources.md](data-sources.md).
-- There are currently no automated CI tests. Change validation uses syntax checks, HTML/a11y audits, contrast calculations, and a deployed browser smoke review; record those checks in the PR description.
+- There is currently no automated test or accessibility-audit job in CI; the Pages workflow deploys static files and does not gate publication on a test suite. For each change, record the checks actually performed in the PR description. At minimum, review affected pages in a browser, exercise keyboard focus and responsive layouts, and check empty/error states. Do not describe a manual check as an automated test.

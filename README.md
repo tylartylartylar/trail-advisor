@@ -2,6 +2,8 @@
 
 A small outdoor-planning demo: search for a city or public trail, explore a labeled map, review quality-reviewed agency trail records, and check current U.S. weather, forecasts, and advisories. It is a static site with no build step or API key.
 
+> **Project status: Alpha portfolio demo.** Trail Advisor is for exploration and review, not operational trip decisions or emergency response. Public data can be incomplete, stale, or unavailable. The app does not verify trail access, current trail conditions, or route safety.
+
 ## Why Trail Advisor exists
 
 Trail Advisor is an independent portfolio project exploring a simple question: can trail, map, and official weather information be brought together in a useful, approachable planning tool? It is a learning/demo product, not an official emergency service, a replacement for land-manager guidance, or a claim that any route is safe. It focuses on U.S. public data and uses the USGS National Digital Trails aggregation, which draws from public federal, state, and some local agency sources. The longer-term direction is clearer route context, more reliable and current trail conditions, and broader coverage where ethical, legal, and practical data sources exist.
@@ -36,7 +38,9 @@ Use the [Trail Advisor suggestion form](https://github.com/tylartylartylar/trail
 
 ## GitHub Pages
 
-The workflow in `.github/workflows/pages.yml` publishes the static site on pushes to `main`. In the repository, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. The expected site address is <https://tylartylartylar.github.io/trail-advisor/> once Pages is enabled and the first deployment succeeds.
+The workflow in `.github/workflows/pages.yml` publishes the repository root on pushes to `main` or a manual workflow run. GitHub Pages must use **Settings → Pages → Build and deployment → Source → GitHub Actions**. The portfolio site is <https://tylartylartylar.github.io/trail-advisor/>; deployment status and history are available in the repository's **Actions** tab.
+
+Changes are developed on `alpha`, reviewed there, and promoted to `main` for publication. `main` is the deployed branch; `alpha` is the integration branch. Pre-release tags identify review milestones, not production approval.
 
 ## Run locally
 
@@ -89,3 +93,15 @@ MapLibre GL JS is distributed under the BSD 3-Clause license. Trail Advisor is n
 - [Release history](CHANGELOG.md)
 
 The project currently uses `main` for the published portfolio demo and `alpha` for active pre-release changes. Alpha milestones are marked with pre-release tags (for example, `v0.1.0-alpha.1`). See [CONTRIBUTING.md](CONTRIBUTING.md) for the branch, change, and release conventions.
+
+## Repository layout
+
+- `index.html`, `explorer.html`, `advisories.html` — the landing page, map explorer, and weather-advisory lookup.
+- `docs/` — architecture and source/coverage/reuse documentation.
+- `.github/workflows/pages.yml` — GitHub Pages deployment workflow.
+- `.github/ISSUE_TEMPLATE/` and `.github/PULL_REQUEST_TEMPLATE.md` — feedback and change-submission templates.
+- `SECURITY.md`, `CONTRIBUTING.md`, `CHANGELOG.md` — security reporting, review conventions, and notable changes.
+
+## License and reuse
+
+This repository currently has **no project-level software license**. Making it public allows people to view the source on GitHub, but does not grant permission to reuse, modify, or redistribute the Trail Advisor code. Ask the repository owner before reusing it. Third-party libraries, map data, imagery, and agency data remain subject to their respective licenses and terms; see [Data sources](docs/data-sources.md). A missing project license does not change those providers' terms.
