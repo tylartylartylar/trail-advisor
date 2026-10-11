@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#101611" />
+    <meta name="theme-color" content="#111b25" />
     <meta name="description" content="Check current National Weather Service weather and fire-weather alerts before heading out." />
     <title>Current advisories — Trail Advisor</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -20,27 +20,27 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js"></script>
     <style>
-      :root { color-scheme: dark; --bg:#101611; --panel:#19221b; --panel2:#202b22; --muted:#a3afa1; --white:#f4f5ef; --green:#b6e27b; --line:#ffffff17; }
+      :root { color-scheme: dark; --bg:#111b25; --panel:#1a2934; --panel2:#223640; --muted:#adbec5; --white:#f1f6f7; --green:#66d6c4; --accentText:#0d2727; --line:#d6e7ed24; }
       * { box-sizing:border-box; }
-      body { min-width:320px; min-height:100vh; margin:0; background:radial-gradient(ellipse at 80% 0%,#213125 0%,#121a14 48%,#0d120e 100%); color:var(--white); font-family:'DM Sans',sans-serif; }
+      body { min-width:320px; min-height:100vh; margin:0; background:radial-gradient(ellipse at 80% 0%, #172a36 0%,#121e28 48%,#0d151d 100%); color:var(--white); font-family:'DM Sans',sans-serif; }
       a { color:inherit; }
       a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline:2px solid var(--green); outline-offset:3px; }
       .topbar { position:sticky; top:0; z-index:10; height:78px; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(20px,6vw,88px); border-bottom:1px solid var(--line); background:#111811eF; backdrop-filter:blur(16px); }
       .topbar > div { display:flex; align-items:center; }
       .brand { display:flex; align-items:center; gap:11px; font:800 19px 'Manrope',sans-serif; letter-spacing:-.7px; text-decoration:none; }
-      .brand-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:11px; color:#182015; background:var(--green); }
+      .brand-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:11px; color:var(--accentText); background:var(--green); }
       .brand-mark svg { width:20px; height:20px; }
       .back-link { color:#c4cbbf; font-size:13px; text-decoration:none; }
       .back-link:hover { color:var(--green); }
       .mode-toggle { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:34px; margin-left:16px; padding:0 11px; border:1px solid #ffffff26; border-radius:10px; color:#e0e6dc; background:#182119; font:600 11px 'DM Sans',sans-serif; cursor:pointer; }
-      .mode-toggle:hover { border-color:#b6e27b80; }
+      .mode-toggle:hover { border-color:#66d6c480; }
       .mode-toggle:focus-visible { outline:2px solid var(--green); outline-offset:3px; }
       .mode-toggle[aria-pressed="true"] { color:#ff7777; border-color:#a42b2b; background:#210707; }
       .mode-toggle svg { width:15px; height:15px; }
       .mode-picker { display:inline-flex; align-items:center; gap:8px; min-height:38px; margin-left:15px; padding:0 11px; border:1px solid #ffffff30; border-radius:999px; color:#e0e6dc; background:#182119; box-shadow:inset 0 1px #ffffff08,0 4px 16px #0002; transition:border-color .2s,background .2s,box-shadow .2s; }
-      .mode-picker svg { width:20px; height:20px; color:#b6e27b; flex:none; transition:color .2s; }
+      .mode-picker svg { width:20px; height:20px; color:#66d6c4; flex:none; transition:color .2s; }
       .mode-picker select { max-width:104px; padding:0 15px 0 0; appearance:none; -webkit-appearance:none; border:0; outline:0; color:inherit; background:transparent; font:600 11px 'DM Sans',sans-serif; cursor:pointer; }
-      .mode-picker select option { color:#172019; background:#f4f5ef; }
+      .mode-picker select option { color:#172019; background:#f1f6f7; }
       .mode-picker::after { content:''; width:6px; height:6px; margin:-3px 1px 0 -12px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; opacity:.8; transform:rotate(45deg); pointer-events:none; }
       .mode-picker:focus-within { outline:2px solid var(--green); outline-offset:3px; }
       .skip-link { position:fixed; z-index:20; top:8px; left:8px; padding:10px 14px; border-radius:9px; color:#14200f; background:#d4f3ad; font-size:13px; font-weight:700; transform:translateY(-160%); }
@@ -50,12 +50,12 @@
       .eyebrow::before { content:''; width:24px; height:1px; background:var(--green); }
       h1 { margin:0; font:600 clamp(37px,6vw,58px)/1.06 'Manrope',sans-serif; letter-spacing:-2.8px; }
       .lede { max-width:620px; margin:16px 0 30px; color:#b5bdb1; font-size:15px; line-height:1.7; }
-      .search-card { padding:20px; border:1px solid var(--line); border-radius:20px; background:#19221bd9; box-shadow:0 18px 55px #0002; }
+      .search-card { padding:20px; border:1px solid var(--line); border-radius:20px; background:#1a2934d9; box-shadow:0 18px 55px #0002; }
       .search-label { display:block; margin-bottom:10px; color:#e8ebe4; font-size:13px; font-weight:600; }
       .search-row { display:flex; gap:10px; }
       .input-wrap { position:relative; flex:1; min-width:0; }
       input { width:100%; height:48px; padding:0 15px 0 43px; border:1px solid #ffffff24; border-radius:12px; outline:0; color:var(--white); background:#101711; font:14px 'DM Sans',sans-serif; }
-      input:focus { border-color:#b6e27b99; box-shadow:0 0 0 3px #b6e27b1c; }
+      input:focus { border-color:#66d6c499; box-shadow:0 0 0 3px #66d6c41c; }
       input::placeholder { color:#778275; }
       .pin { position:absolute; left:15px; top:15px; width:17px; height:17px; color:#a6b09f; pointer-events:none; }
       .suggestions { position:absolute; z-index:5; top:calc(100% + 6px); left:0; right:0; max-height:280px; overflow:auto; padding:5px; border:1px solid #ffffff24; border-radius:12px; background:#111811; box-shadow:0 14px 34px #0008; }
@@ -65,7 +65,7 @@
       .suggestion strong { display:block; font-size:13px; font-weight:600; }
       .suggestion small { display:block; margin-top:3px; color:#929e90; font-size:11px; font-weight:400; }
       .search-hint { margin:9px 1px 0; color:#899587; font-size:11px; line-height:1.45; }
-      button { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 18px; border:1px solid transparent; border-radius:12px; color:#182015; background:var(--green); font:700 13px 'DM Sans',sans-serif; cursor:pointer; transition:filter .2s,transform .2s; white-space:nowrap; }
+      button { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 18px; border:1px solid transparent; border-radius:12px; color:var(--accentText); background:var(--green); font:700 13px 'DM Sans',sans-serif; cursor:pointer; transition:filter .2s,transform .2s; white-space:nowrap; }
       button:hover { filter:brightness(1.06); transform:translateY(-1px); }
       button:disabled { opacity:.6; cursor:wait; transform:none; }
       button.secondary { color:#e2e7df; border-color:#ffffff24; background:#253027; }
@@ -74,19 +74,19 @@
       .actions svg { width:15px; height:15px; }
       .status { display:flex; align-items:center; gap:10px; min-height:44px; margin:14px 0 0; padding:10px 13px; border:1px solid #ffffff16; border-radius:11px; color:#c4cec0; background:#1118118a; font-size:13px; font-weight:500; line-height:1.5; }
       .status::before { content:''; flex:none; width:8px; height:8px; border-radius:50%; background:#9fae99; }
-      .status.loading { border-color:#b6e27b40; color:#e0ebd7; background:#b6e27b0d; }
-      .status.loading::before { background:var(--green); box-shadow:0 0 0 4px #b6e27b20; animation:pulse 1.2s ease infinite; }
-      .status.success { border-color:#b6e27b40; color:#dff0cd; background:#b6e27b0d; }
-      .status.success::before { background:var(--green); box-shadow:0 0 0 4px #b6e27b20; }
+      .status.loading { border-color:#66d6c440; color:#e0ebd7; background:#66d6c40d; }
+      .status.loading::before { background:var(--green); box-shadow:0 0 0 4px #66d6c420; animation:pulse 1.2s ease infinite; }
+      .status.success { border-color:#66d6c440; color:#dff0cd; background:#66d6c40d; }
+      .status.success::before { background:var(--green); box-shadow:0 0 0 4px #66d6c420; }
       .status.error { border-color:#ff766444; color:#ffc1b8; background:#ff655d0d; }
       .status.error::before { background:#ff7664; box-shadow:0 0 0 4px #ff76641a; }
-      @keyframes pulse { 50% { opacity:.45; box-shadow:0 0 0 7px #b6e27b08; } }
+      @keyframes pulse { 50% { opacity:.45; box-shadow:0 0 0 7px #66d6c408; } }
       .results { margin-top:28px; scroll-margin-top:20px; }
       .results-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:13px; }
       h2 { margin:0; font:600 22px 'Manrope',sans-serif; letter-spacing:-.6px; }
       .updated { color:#899587; font-size:11px; }
       .cards { display:grid; grid-template-columns:1fr; gap:11px; }
-      .alert-card { padding:17px 19px; border:1px solid var(--line); border-left:3px solid #a7b49e; border-radius:14px; background:#19221be8; }
+      .alert-card { padding:17px 19px; border:1px solid var(--line); border-left:3px solid #a7b49e; border-radius:14px; background:#1a2934e8; }
       .alert-card.sev-extreme { border-left-color:#ff655d; }
       .alert-card.sev-severe { border-left-color:#ff9b54; }
       .alert-card.sev-moderate { border-left-color:#f0c75c; }
@@ -101,18 +101,18 @@
       .alert-card p { margin:0; color:#b1bbae; font-size:13px; line-height:1.65; white-space:pre-wrap; }
       .focus-alert { height:32px; margin-top:12px; padding:0 11px; color:#e1e9dc !important; border-color:#ffffff24 !important; background:#253027 !important; font-size:11px; }
       .alert-time { display:flex; flex-wrap:wrap; gap:12px; margin-top:12px; color:#849080; font-size:11px; }
-      .empty { padding:24px; border:1px dashed #ffffff24; border-radius:14px; color:#bac4b5; background:#19221b91; font-size:14px; line-height:1.6; }
-      .note { margin-top:22px; padding:16px 18px; border:1px solid #b6e27b21; border-radius:14px; color:#aab5a7; background:#b6e27b08; font-size:12px; line-height:1.7; }
+      .empty { padding:24px; border:1px dashed #ffffff24; border-radius:14px; color:#bac4b5; background:#1a293491; font-size:14px; line-height:1.6; }
+      .note { margin-top:22px; padding:16px 18px; border:1px solid #66d6c421; border-radius:14px; color:#aabec0; background:#66d6c408; font-size:12px; line-height:1.7; }
       .note strong { color:#dce5d4; }
       .note a { color:var(--green); text-underline-offset:3px; }
-      .diagnostics { margin-top:16px; border:1px solid #ffffff16; border-radius:13px; background:#121a14b8; color:#aeb9aa; font-size:12px; }
+      .diagnostics { margin-top:16px; border:1px solid #ffffff16; border-radius:13px; background:#152631b8; color:#aebfc2; font-size:12px; }
       .diagnostics summary { padding:13px 15px; color:#c6cfc2; cursor:pointer; font-weight:600; }
       .diagnostics-body { padding:0 15px 15px; }
       .diagnostics-top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:9px; }
       .diagnostics-top p { margin:0; color:#899587; font-size:11px; }
       .copy-log { height:32px; padding:0 11px; font-size:11px; }
       .diagnostic-log { margin:0; padding:12px; border-radius:9px; color:#d3dccf; background:#0c120d; font:11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
-      .map-panel { margin:20px 0 16px; overflow:hidden; border:1px solid var(--line); border-radius:16px; background:#19221b; }
+      .map-panel { margin:20px 0 16px; overflow:hidden; border:1px solid var(--line); border-radius:16px; background:#1a2934; }
       .map-panel[hidden] { display:none; }
       .map-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 17px; }
       .map-heading h3 { margin:0; font:600 15px 'Manrope',sans-serif; }
@@ -121,18 +121,18 @@
       .map-footnote { margin:0; padding:10px 15px; color:#929e90; font-size:11px; line-height:1.5; }
       .maplibregl-ctrl-group { overflow:hidden; border:1px solid #ffffff24 !important; border-radius:9px !important; }
       .maplibregl-ctrl-attrib { font-size:10px !important; }
-      .risk-summary { margin:0 0 18px; padding:20px 22px; border:1px solid #ffffff20; border-left:4px solid #b6e27b; border-radius:15px; background:#19221b; }
+      .risk-summary { margin:0 0 18px; padding:20px 22px; border:1px solid #ffffff20; border-left:4px solid #66d6c4; border-radius:15px; background:#1a2934; }
       .risk-summary[data-level="2"] { border-left-color:#c7d66a; }
       .risk-summary[data-level="3"] { border-left-color:#f0c75c; }
       .risk-summary[data-level="4"] { border-left-color:#ff9b54; }
       .risk-summary[data-level="5"] { border-left-color:#ff655d; }
       .risk-top { display:flex; align-items:center; justify-content:space-between; gap:16px; }
-      .risk-kicker { color:#aab5a7; font-size:10px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; }
+      .risk-kicker { color:#aabec0; font-size:10px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; }
       .risk-top strong { color:#dce5d4; font-size:12px; }
       .risk-summary h3 { margin:10px 0 5px; font:650 18px 'Manrope',sans-serif; }
       .risk-summary p { margin:0; color:#b1bbae; font-size:13px; line-height:1.6; }
       .risk-summary small { display:block; margin-top:11px; color:#899587; font-size:11px; line-height:1.5; }
-      .firms-warning { width:min(440px,calc(100% - 30px)); padding:24px; border:1px solid #ffffff25; border-radius:17px; color:#f4f5ef; background:#172019; box-shadow:0 25px 80px #0009; }
+      .firms-warning { width:min(440px,calc(100% - 30px)); padding:24px; border:1px solid #ffffff25; border-radius:17px; color:#f1f6f7; background:#172019; box-shadow:0 25px 80px #0009; }
       .firms-warning::backdrop { background:#000b; backdrop-filter:blur(3px); }
       .firms-warning h2 { margin:0 0 10px; font:700 20px 'Manrope',sans-serif; }
       .firms-warning p { margin:0; color:#c1c9bd; font-size:14px; line-height:1.6; }
@@ -140,34 +140,34 @@
       .warning-actions button { height:39px; padding:0 13px; }
       @media(max-width:480px) { .warning-actions { flex-direction:column-reverse; } .warning-actions button { width:100%; } }
       footer { display:flex; justify-content:space-between; gap:14px; padding:18px clamp(20px,6vw,88px); border-top:1px solid var(--line); color:#82907f; font-size:11px; }
-      footer a { color:#aab5a7; text-decoration:none; }
+      footer a { color:#aabec0; text-decoration:none; }
       footer a:hover { color:var(--green); }
       @media(max-width:620px) { .topbar { height:66px; } main { padding-top:40px; } .search-card { padding:15px; } .search-row { flex-direction:column; } .search-row button { width:100%; } .actions button { flex:1; } .results-head { align-items:flex-start; flex-direction:column; } footer { font-size:10px; } .mode-picker { margin-left:8px; padding:0 6px; } .mode-picker select { max-width:82px; } }
-      html.light-mode { color-scheme:light; --bg:#f4f6f0; --panel:#fff; --panel2:#edf1e9; --muted:#596455; --white:#1d271d; --green:#5a8428; --line:#21351d26; }
-      html.light-mode body { background:radial-gradient(ellipse at 80% 0%,#e4eddb 0%,#f5f7f2 52%,#edf1e8 100%); color:#1d271d; }
-      html.light-mode .topbar, html.light-mode footer { background:#f7f9f4d9; }
-      html.light-mode .back-link, html.light-mode footer a, html.light-mode .search-label, html.light-mode .map-heading h3, html.light-mode h2 { color:#263424; }
+      html.light-mode { color-scheme:light; --bg:#f1f5f5; --panel:#fff; --panel2:#e5eeee; --muted:#596b6d; --white:#172526; --green:#08776f; --accentText:#ffffff; --line:#21351d26; }
+      html.light-mode body { background:radial-gradient(ellipse at 80% 0%,#e1eded 0%,#f7f9f8 52%,#edf2f2 100%); color:#172526; }
+      html.light-mode .topbar, html.light-mode footer { background:#f7f9f8e8; }
+      html.light-mode .back-link, html.light-mode footer a, html.light-mode .search-label, html.light-mode .map-heading h3, html.light-mode h2 { color:#1c3437; }
       html.light-mode .mode-picker { color:#273522; border-color:#24341e35; background:#fff; }
       html.light-mode .search-card, html.light-mode .alert-card, html.light-mode .map-panel, html.light-mode .diagnostics, html.light-mode .firms-warning { background:#ffffffdb; }
       html.light-mode .risk-summary { background:#ffffffdb; }
-      html.light-mode .risk-kicker, html.light-mode .risk-top strong, html.light-mode .risk-summary h3 { color:#263424; }
-      html.light-mode .risk-summary p, html.light-mode .risk-summary small { color:#4c5948; }
-      html.light-mode input { color:#1d271d; border-color:#26351f35; background:#fff; }
-      html.light-mode .search-hint, html.light-mode .updated, html.light-mode .severity, html.light-mode .alert-time, html.light-mode .map-heading span, html.light-mode .map-footnote, html.light-mode .diagnostics-top p { color:#64705f; }
-      html.light-mode .lede, html.light-mode .alert-card p, html.light-mode .note, html.light-mode .diagnostics, html.light-mode .firms-warning p { color:#4c5948; }
-      html.light-mode .alert-card h3, html.light-mode .firms-warning h2 { color:#263424; }
-      html.light-mode .empty { color:#43513f; background:#ffffffaa; }
-      html.light-mode .note { background:#e7efde; }
-      html.light-mode .diagnostic-log { color:#263424; background:#eff2eb; }
+      html.light-mode .risk-kicker, html.light-mode .risk-top strong, html.light-mode .risk-summary h3 { color:#1c3437; }
+      html.light-mode .risk-summary p, html.light-mode .risk-summary small { color:#4c6264; }
+      html.light-mode input { color:#172526; border-color:#26351f35; background:#fff; }
+      html.light-mode .search-hint, html.light-mode .updated, html.light-mode .severity, html.light-mode .alert-time, html.light-mode .map-heading span, html.light-mode .map-footnote, html.light-mode .diagnostics-top p { color:#566a6b; }
+      html.light-mode .lede, html.light-mode .alert-card p, html.light-mode .note, html.light-mode .diagnostics, html.light-mode .firms-warning p { color:#4c6264; }
+      html.light-mode .alert-card h3, html.light-mode .firms-warning h2 { color:#1c3437; }
+      html.light-mode .empty { color:#42595b; background:#ffffffaa; }
+      html.light-mode .note { background:#e5efed; }
+      html.light-mode .diagnostic-log { color:#1c3437; background:#eff4f3; }
       html.light-mode .maplibregl-ctrl-attrib { color:#283425; background:#ffffffd9; }
       html.light-mode .suggestions { background:#fff; }
-      html.light-mode .suggestion { color:#263424; }
-      html.light-mode .suggestion:hover, html.light-mode .suggestion[aria-selected="true"] { color:#263424; background:#edf3e7; }
-      html.light-mode .suggestion small { color:#667360; }
+      html.light-mode .suggestion { color:#1c3437; }
+      html.light-mode .suggestion:hover, html.light-mode .suggestion[aria-selected="true"] { color:#1c3437; background:#edf3e7; }
+      html.light-mode .suggestion small { color:#667b7c; }
       html.light-mode .mode-picker svg { color:#435b32; }
-      html.red-light-mode { color-scheme:dark; --bg:#050000; --panel:#120303; --panel2:#1b0505; --muted:#a13a3a; --white:#bd4b4b; --green:#e04747; --line:#571414; }
-      html.red-light-mode body { background:#040000 !important; color:#bd4b4b !important; }
-      html.red-light-mode body * { color:#bd4b4b !important; border-color:#571414 !important; box-shadow:none !important; text-shadow:none !important; }
+      html.red-light-mode { color-scheme:dark; --bg:#050000; --panel:#120303; --panel2:#1b0505; --muted:#d06666; --white:#d06666; --green:#e04747; --line:#571414; }
+      html.red-light-mode body { background:#040000 !important; color:#d06666 !important; }
+      html.red-light-mode body * { color:#d06666 !important; border-color:#571414 !important; box-shadow:none !important; text-shadow:none !important; }
       html.red-light-mode .topbar, html.red-light-mode footer, html.red-light-mode .search-card, html.red-light-mode .alert-card, html.red-light-mode .empty, html.red-light-mode .note, html.red-light-mode .diagnostics, html.red-light-mode .diagnostic-log { background:#100202 !important; }
       html.red-light-mode .risk-summary { background:#100202 !important; }
       html.red-light-mode .mode-picker { color:#d45b5b !important; background:#180303 !important; border-color:#8b2929 !important; box-shadow:inset 0 1px #ff777712,0 0 14px #ad222218 !important; }
@@ -185,11 +185,12 @@
       html.red-light-mode .maplibregl-ctrl-attrib { background:#080101dd !important; }
       html.theme-transition, html.theme-transition body, html.theme-transition body * { transition: color 2.5s ease, background 2.5s ease, border-color 2.5s ease, box-shadow 2.5s ease, filter 2.5s ease !important; }
       @media(prefers-reduced-motion:reduce) { html.theme-transition, html.theme-transition body, html.theme-transition body * { transition-duration:2.5s !important; } }
+      @media(prefers-reduced-motion:reduce) { .status.loading::before { animation:none; } }
     </style>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="index.html" aria-label="Trail Advisor home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19 10.2 6l3.1 6.3 1.7-3.4L20 19H4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m8.3 10 1.9 2 1.8-1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Trail Advisor</a>
+      <a class="brand" href="index.html" aria-label="Trail Advisor home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6 20 10 14l-2-4 7-6m0 0v5m0-5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="20" r="1.6" fill="currentColor"/><circle cx="10" cy="14" r="1.6" fill="currentColor"/></svg></span>Trail Advisor</a>
       <div><a class="back-link" href="index.html">Home</a><a class="back-link" href="explorer.html" style="margin-left:16px">Explore map</a><label class="mode-picker" title="Display mode"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 13h10l5 3v2H8l-4-2v-3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 13V9.5a2.5 2.5 0 0 0-5 0V13m10 3 2-1.5M4 13l-2-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M9.5 9.5h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><select id="theme-mode" aria-label="Color mode"><option value="light">Light mode</option><option value="dark">Dark mode</option><option value="red">Red mode 🔦</option></select></label></div>
     </header>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -243,7 +244,7 @@
       <p id="firms-warning-text">This page may open a very bright white screen. Continue and Trail Advisor will fade to Light mode before opening it.</p>
       <div class="warning-actions"><button class="secondary" id="cancel-firms" type="button">Stay here</button><button id="continue-firms" type="button">Continue and adjust my eyes</button></div>
     </dialog>
-    <footer><span>Trail Advisor · Demo</span><span><a href="https://www.weather.gov/documentation/services-web-alerts" target="_blank" rel="noreferrer">NWS alerts</a> · <a href="https://photon.komoot.io/" target="_blank" rel="noreferrer">Photon search</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap data</a></span></footer>
+    <footer><span>Trail Advisor · Independent portfolio project · <a href="https://github.com/tylartylartylar/trail-advisor/issues/new?template=suggestion.yml">Share feedback</a></span><span><a href="https://www.weather.gov/documentation/services-web-alerts" target="_blank" rel="noreferrer">NWS alerts</a> · <a href="https://photon.komoot.io/" target="_blank" rel="noreferrer">Photon search</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap data</a></span></footer>
     <script>
       const form = document.getElementById('search-form');
       const input = document.getElementById('location');
@@ -543,7 +544,7 @@
           source.rel = 'noreferrer';
           source.className = 'official-alert-link';
           source.textContent = 'Open official alert';
-          source.style.cssText = 'display:inline-block;margin-top:12px;color:#b6e27b;font-size:12px;text-underline-offset:3px';
+          source.style.cssText = 'display:inline-block;margin-top:12px;color:#66d6c4;font-size:12px;text-underline-offset:3px';
           article.append(source);
         }
         return article;
@@ -752,7 +753,7 @@
         document.documentElement.classList.add('light-mode');
         document.documentElement.dataset.theme = 'light';
         themeMode.value = 'light';
-        document.querySelector('meta[name="theme-color"]').content = '#f4f6f0';
+        document.querySelector('meta[name="theme-color"]').content = '#f1f5f5';
         window.setTimeout(() => {
           document.documentElement.classList.remove('theme-transition');
           themeMode.disabled = false;
@@ -770,7 +771,7 @@
               retryLink.target = '_blank';
               retryLink.rel = 'noopener noreferrer';
               retryLink.textContent = `Open ${destinationLabel}`;
-              retryLink.style.cssText = 'margin-left:7px;color:#5a8428;text-decoration:underline';
+              retryLink.style.cssText = 'margin-left:7px;color:#167e76;text-decoration:underline';
               statusLine.append(retryLink);
             }
           }
@@ -804,7 +805,7 @@
         document.documentElement.classList.toggle('red-light-mode', mode === 'red');
         document.documentElement.classList.toggle('light-mode', mode === 'light');
         themeMode.value = mode;
-        document.querySelector('meta[name="theme-color"]').content = mode === 'red' ? '#040000' : mode === 'light' ? '#f4f6f0' : '#101611';
+        document.querySelector('meta[name="theme-color"]').content = mode === 'red' ? '#040000' : mode === 'light' ? '#f1f5f5' : '#111b25';
         try {
           localStorage.setItem('trail-theme', mode);
           localStorage.setItem('trail-red-light', mode === 'red' ? 'on' : 'off');

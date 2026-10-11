@@ -1,0 +1,37 @@
+name: Trail Advisor feedback
+description: Suggest an improvement or report a usability or accessibility issue.
+title: "[Feedback]: "
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Thanks for helping improve Trail Advisor. Issues are public and may show
+        your GitHub username. Please do not include private location history or
+        other sensitive personal information.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of feedback is this?
+      options:
+        - Feature idea
+        - Usability issue
+        - Accessibility issue
+        - Data or map issue
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What would you like to see improved?
+      description: Describe the idea or issue in a few sentences.
+      placeholder: What happened, or what would make the app more useful?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Optional context
+      description: Which page or device? Steps to reproduce help with bug reports.
+    validations:
+      required: false
