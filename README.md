@@ -32,7 +32,7 @@ Built by Tylar as a personal portfolio project.
 
 ## Feedback
 
-Use the [Trail Advisor suggestion form](https://github.com/tylartylartylar/trail-advisor/issues/new?template=suggestion.yml) to share an idea, usability issue, or accessibility observation. Feedback is submitted as a GitHub issue, so it is public and may include your GitHub username. Please do not include private location history or sensitive personal information.
+Use the [Trail Advisor suggestion form](https://github.com/tylartylartylar/trail-advisor/issues/new?template=suggestion.yml) to share an idea, usability issue, or accessibility observation. Feedback is submitted as a GitHub issue, so it is public, requires a GitHub sign-in, and may include your GitHub username. Please do not include private location history or sensitive personal information.
 
 ## GitHub Pages
 
