@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#111811" />
+  <meta name="description" content="Trail Advisor helps you explore places and check weather advisories before heading outdoors." />
+  <title>Trail Advisor — Know before you go</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <script>
+    (() => { try { const t = localStorage.getItem('trail-theme') || (localStorage.getItem('trail-red-light') === 'on' ? 'red' : 'dark'); document.documentElement.dataset.theme = t; document.documentElement.classList.add(t === 'red' ? 'red-light-mode' : t === 'light' ? 'light-mode' : 'dark-mode'); } catch {} })();
+  </script>
+  <style>
+    :root{color-scheme:dark;--bg:#101611;--surface:#19221b;--text:#f3f5ef;--muted:#b6c1b5;--line:#ffffff20;--accent:#b6e27b;--accentText:#17200f}*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);transition:background .25s,color .25s}a{color:inherit}.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,6vw,88px);border-bottom:1px solid var(--line);background:var(--bg)}.brand{display:flex;align-items:center;gap:11px;text-decoration:none;font-size:19px;font-weight:760;letter-spacing:-.04em}.brand-mark{width:35px;height:35px;display:grid;place-items:center;border-radius:12px;background:var(--accent);color:var(--accentText)}.brand-mark svg{width:21px}.nav{display:flex;align-items:center;gap:25px}.nav a{text-decoration:none;color:var(--muted);font-size:13px;font-weight:650}.nav a:hover{color:var(--text)}.mode-picker{height:40px;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:0 12px;color:var(--muted)}.mode-picker svg{width:17px;height:17px}.mode-picker select{border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:12px;font-weight:650;cursor:pointer}.mode-picker option{background:var(--surface);color:var(--text)}main{max-width:1160px;margin:auto;padding:clamp(62px,10vw,132px) 24px 96px}.eyebrow{display:flex;align-items:center;gap:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.19em;font-size:11px;font-weight:800}.eyebrow:before{content:"";width:28px;height:1px;background:currentColor}h1{max-width:770px;margin:20px 0 21px;font-size:clamp(48px,8vw,96px);line-height:.98;letter-spacing:-.075em;font-weight:730}.lede{max-width:610px;color:var(--muted);font-size:clamp(16px,2vw,19px);line-height:1.7;margin:0}.actions{display:flex;flex-wrap:wrap;gap:13px;margin-top:34px}.button{min-height:52px;padding:0 21px;display:inline-flex;align-items:center;justify-content:center;gap:12px;border-radius:13px;text-decoration:none;font-size:14px;font-weight:740;transition:transform .18s,background .18s}.button:hover{transform:translateY(-2px)}.button svg{width:18px}.primary{background:var(--accent);color:var(--accentText)}.secondary{border:1px solid var(--line);background:var(--surface);color:var(--text)}.features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:clamp(60px,9vw,108px)}.feature{min-height:176px;padding:25px;border:1px solid var(--line);border-radius:20px;background:var(--surface);text-decoration:none;transition:border-color .2s,transform .2s}.feature:hover{border-color:var(--accent);transform:translateY(-3px)}.feature-icon{width:38px;height:38px;border-radius:12px;background:color-mix(in srgb,var(--accent) 17%,transparent);color:var(--accent);display:grid;place-items:center}.feature-icon svg{width:21px}.feature h2{font-size:19px;letter-spacing:-.03em;margin:18px 0 7px}.feature p{color:var(--muted);font-size:13px;line-height:1.55;margin:0}.foot{display:flex;justify-content:space-between;gap:20px;padding:21px clamp(20px,6vw,88px);border-top:1px solid var(--line);color:var(--muted);font-size:11px}.skip{position:absolute;left:-9999px}.skip:focus{left:15px;top:15px;background:var(--surface);padding:10px;z-index:20}
+    html.light-mode{color-scheme:light;--bg:#f4f6f0;--surface:#fff;--text:#182019;--muted:#576357;--line:#26351f25;--accent:#80b841;--accentText:#10200b}html.red-light-mode{color-scheme:dark;--bg:#080101;--surface:#110303;--text:#dc5555;--muted:#b94b4b;--line:#6d1717;--accent:#eb4141;--accentText:#180303}html.red-light-mode .mode-picker select{color:var(--text)}html.red-light-mode .feature-icon{background:#260707}
+    @media(max-width:680px){.topbar{height:auto;min-height:68px;padding:12px 18px;gap:14px;flex-wrap:wrap}.nav{gap:12px}.nav a{font-size:12px}.features{grid-template-columns:1fr}.feature{min-height:155px}.foot{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19 10.2 6l3.1 6.3 1.7-3.4L20 19H4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span>Trail Advisor</a>
+    <nav class="nav" aria-label="Main navigation"><a href="explorer.html">Explore map</a><a href="advisories.html">Advisories</a><label class="mode-picker" title="Display mode"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 13h10l5 3v2H8l-4-2v-3Z" stroke="currentColor" stroke-width="1.7"/><path d="M14 13V9.5a2.5 2.5 0 0 0-5 0V13m10 3 2-1.5M4 13l-2-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><select id="theme-mode" aria-label="Color mode"><option value="light">Light mode</option><option value="dark">Dark mode</option><option value="red">Red mode 🔦</option></select></label></nav>
+  </header>
+  <a class="skip" href="#main">Skip to content</a>
+  <main id="main">
+    <p class="eyebrow">Know before you go</p>
+    <h1>Your next trail,<br />better prepared.</h1>
+    <p class="lede">Trail Advisor helps you get oriented and check current weather alerts before you head out. Pick a place, see what’s happening nearby, and make a more informed plan.</p>
+    <div class="actions"><a class="button primary" href="explorer.html">Explore the map <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a><a class="button secondary" href="advisories.html">View current advisories</a></div>
+    <section class="features" aria-label="What you can do">
+      <a class="feature" href="explorer.html"><span class="feature-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 9h17M3.5 15h17M12 3c2 2.3 3 5.3 3 9s-1 6.7-3 9c-2-2.3-3-5.3-3-9s1-6.7 3-9Z" stroke="currentColor" stroke-width="1.4"/></svg></span><h2>Get your bearings</h2><p>Explore an interactive world map with cities and borders that come into view as you zoom.</p></a>
+      <a class="feature" href="advisories.html"><span class="feature-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 21 19H3L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 9v4m0 3h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><h2>Check conditions</h2><p>Look up active U.S. weather and fire-weather alerts for a location or your current position.</p></a>
+    </section>
+  </main>
+  <footer class="foot"><span>Trail Advisor · Demo</span><span>Explore with care. Conditions can change quickly.</span></footer>
+  <script>
+    const modeSelect=document.getElementById('theme-mode');
+    function setMode(mode){document.documentElement.dataset.theme=mode;document.documentElement.classList.toggle('red-light-mode',mode==='red');document.documentElement.classList.toggle('light-mode',mode==='light');modeSelect.value=mode;document.querySelector('meta[name="theme-color"]').content=mode==='red'?'#080101':mode==='light'?'#f4f6f0':'#101611';try{localStorage.setItem('trail-theme',mode);localStorage.setItem('trail-red-light',mode==='red'?'on':'off')}catch{}}
+    modeSelect.addEventListener('change',()=>setMode(modeSelect.value));setMode(document.documentElement.dataset.theme||'dark');
+  </script>
+</body>
+</html>

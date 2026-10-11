@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101611" />
+    <meta name="description" content="Check current National Weather Service weather and fire-weather alerts before heading out." />
+    <title>Current advisories — Trail Advisor</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <script>
+      try {
+        const savedTheme = localStorage.getItem('trail-theme') || (localStorage.getItem('trail-red-light') === 'on' ? 'red' : 'dark');
+        document.documentElement.dataset.theme = savedTheme;
+        if (savedTheme === 'red') document.documentElement.classList.add('red-light-mode');
+      } catch {}
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.css" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js"></script>
+    <style>
+      :root { color-scheme: dark; --bg:#101611; --panel:#19221b; --panel2:#202b22; --muted:#a3afa1; --white:#f4f5ef; --green:#b6e27b; --line:#ffffff17; }
+      * { box-sizing:border-box; }
+      body { min-width:320px; min-height:100vh; margin:0; background:radial-gradient(ellipse at 80% 0%,#213125 0%,#121a14 48%,#0d120e 100%); color:var(--white); font-family:'DM Sans',sans-serif; }
+      a { color:inherit; }
+      a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline:2px solid var(--green); outline-offset:3px; }
+      .topbar { position:sticky; top:0; z-index:10; height:78px; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(20px,6vw,88px); border-bottom:1px solid var(--line); background:#111811eF; backdrop-filter:blur(16px); }
+      .topbar > div { display:flex; align-items:center; }
+      .brand { display:flex; align-items:center; gap:11px; font:800 19px 'Manrope',sans-serif; letter-spacing:-.7px; text-decoration:none; }
+      .brand-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:11px; color:#182015; background:var(--green); }
+      .brand-mark svg { width:20px; height:20px; }
+      .back-link { color:#c4cbbf; font-size:13px; text-decoration:none; }
+      .back-link:hover { color:var(--green); }
+      .mode-toggle { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:34px; margin-left:16px; padding:0 11px; border:1px solid #ffffff26; border-radius:10px; color:#e0e6dc; background:#182119; font:600 11px 'DM Sans',sans-serif; cursor:pointer; }
+      .mode-toggle:hover { border-color:#b6e27b80; }
+      .mode-toggle:focus-visible { outline:2px solid var(--green); outline-offset:3px; }
+      .mode-toggle[aria-pressed="true"] { color:#ff7777; border-color:#a42b2b; background:#210707; }
+      .mode-toggle svg { width:15px; height:15px; }
+      .mode-picker { display:inline-flex; align-items:center; gap:8px; min-height:38px; margin-left:15px; padding:0 11px; border:1px solid #ffffff30; border-radius:999px; color:#e0e6dc; background:#182119; box-shadow:inset 0 1px #ffffff08,0 4px 16px #0002; transition:border-color .2s,background .2s,box-shadow .2s; }
+      .mode-picker svg { width:20px; height:20px; color:#b6e27b; flex:none; transition:color .2s; }
+      .mode-picker select { max-width:104px; padding:0 15px 0 0; appearance:none; -webkit-appearance:none; border:0; outline:0; color:inherit; background:transparent; font:600 11px 'DM Sans',sans-serif; cursor:pointer; }
+      .mode-picker select option { color:#172019; background:#f4f5ef; }
+      .mode-picker::after { content:''; width:6px; height:6px; margin:-3px 1px 0 -12px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; opacity:.8; transform:rotate(45deg); pointer-events:none; }
+      .mode-picker:focus-within { outline:2px solid var(--green); outline-offset:3px; }
+      .skip-link { position:fixed; z-index:20; top:8px; left:8px; padding:10px 14px; border-radius:9px; color:#14200f; background:#d4f3ad; font-size:13px; font-weight:700; transform:translateY(-160%); }
+      .skip-link:focus { transform:translateY(0); }
+      main { width:min(940px,calc(100% - 40px)); margin:0 auto; padding:58px 0 60px; }
+      .eyebrow { display:flex; align-items:center; gap:10px; margin:0 0 14px; color:var(--green); font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+      .eyebrow::before { content:''; width:24px; height:1px; background:var(--green); }
+      h1 { margin:0; font:600 clamp(37px,6vw,58px)/1.06 'Manrope',sans-serif; letter-spacing:-2.8px; }
+      .lede { max-width:620px; margin:16px 0 30px; color:#b5bdb1; font-size:15px; line-height:1.7; }
+      .search-card { padding:20px; border:1px solid var(--line); border-radius:20px; background:#19221bd9; box-shadow:0 18px 55px #0002; }
+      .search-label { display:block; margin-bottom:10px; color:#e8ebe4; font-size:13px; font-weight:600; }
+      .search-row { display:flex; gap:10px; }
+      .input-wrap { position:relative; flex:1; min-width:0; }
+      input { width:100%; height:48px; padding:0 15px 0 43px; border:1px solid #ffffff24; border-radius:12px; outline:0; color:var(--white); background:#101711; font:14px 'DM Sans',sans-serif; }
+      input:focus { border-color:#b6e27b99; box-shadow:0 0 0 3px #b6e27b1c; }
+      input::placeholder { color:#778275; }
+      .pin { position:absolute; left:15px; top:15px; width:17px; height:17px; color:#a6b09f; pointer-events:none; }
+      .suggestions { position:absolute; z-index:5; top:calc(100% + 6px); left:0; right:0; max-height:280px; overflow:auto; padding:5px; border:1px solid #ffffff24; border-radius:12px; background:#111811; box-shadow:0 14px 34px #0008; }
+      .suggestions[hidden] { display:none; }
+      .suggestion { display:block; width:100%; height:auto; min-height:46px; padding:9px 11px; border:0; border-radius:8px; color:#e7ece4; background:transparent; text-align:left; white-space:normal; }
+      .suggestion:hover, .suggestion[aria-selected="true"] { color:#eff6e9; background:#283529; transform:none; }
+      .suggestion strong { display:block; font-size:13px; font-weight:600; }
+      .suggestion small { display:block; margin-top:3px; color:#929e90; font-size:11px; font-weight:400; }
+      .search-hint { margin:9px 1px 0; color:#899587; font-size:11px; line-height:1.45; }
+      button { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 18px; border:1px solid transparent; border-radius:12px; color:#182015; background:var(--green); font:700 13px 'DM Sans',sans-serif; cursor:pointer; transition:filter .2s,transform .2s; white-space:nowrap; }
+      button:hover { filter:brightness(1.06); transform:translateY(-1px); }
+      button:disabled { opacity:.6; cursor:wait; transform:none; }
+      button.secondary { color:#e2e7df; border-color:#ffffff24; background:#253027; }
+      .actions { display:flex; gap:10px; margin-top:10px; }
+      .actions button { height:40px; padding:0 13px; font-size:12px; }
+      .actions svg { width:15px; height:15px; }
+      .status { display:flex; align-items:center; gap:10px; min-height:44px; margin:14px 0 0; padding:10px 13px; border:1px solid #ffffff16; border-radius:11px; color:#c4cec0; background:#1118118a; font-size:13px; font-weight:500; line-height:1.5; }
+      .status::before { content:''; flex:none; width:8px; height:8px; border-radius:50%; background:#9fae99; }
+      .status.loading { border-color:#b6e27b40; color:#e0ebd7; background:#b6e27b0d; }
+      .status.loading::before { background:var(--green); box-shadow:0 0 0 4px #b6e27b20; animation:pulse 1.2s ease infinite; }
+      .status.success { border-color:#b6e27b40; color:#dff0cd; background:#b6e27b0d; }
+      .status.success::before { background:var(--green); box-shadow:0 0 0 4px #b6e27b20; }
+      .status.error { border-color:#ff766444; color:#ffc1b8; background:#ff655d0d; }
+      .status.error::before { background:#ff7664; box-shadow:0 0 0 4px #ff76641a; }
+      @keyframes pulse { 50% { opacity:.45; box-shadow:0 0 0 7px #b6e27b08; } }
+      .results { margin-top:28px; scroll-margin-top:20px; }
+      .results-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:13px; }
+      h2 { margin:0; font:600 22px 'Manrope',sans-serif; letter-spacing:-.6px; }
+      .updated { color:#899587; font-size:11px; }
+      .cards { display:grid; grid-template-columns:1fr; gap:11px; }
+      .alert-card { padding:17px 19px; border:1px solid var(--line); border-left:3px solid #a7b49e; border-radius:14px; background:#19221be8; }
+      .alert-card.sev-extreme { border-left-color:#ff655d; }
+      .alert-card.sev-severe { border-left-color:#ff9b54; }
+      .alert-card.sev-moderate { border-left-color:#f0c75c; }
+      .alert-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+      .tag { display:inline-flex; align-items:center; gap:7px; color:#dbe2d6; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+      .tag::before { content:''; width:7px; height:7px; border-radius:50%; background:#a7b49e; }
+      .alert-card.sev-extreme .tag::before { background:#ff655d; }
+      .alert-card.sev-severe .tag::before { background:#ff9b54; }
+      .alert-card.sev-moderate .tag::before { background:#f0c75c; }
+      .severity { color:#9aa696; font-size:11px; }
+      .alert-card h3 { margin:10px 0 7px; font:600 18px 'Manrope',sans-serif; letter-spacing:-.3px; }
+      .alert-card p { margin:0; color:#b1bbae; font-size:13px; line-height:1.65; white-space:pre-wrap; }
+      .focus-alert { height:32px; margin-top:12px; padding:0 11px; color:#e1e9dc !important; border-color:#ffffff24 !important; background:#253027 !important; font-size:11px; }
+      .alert-time { display:flex; flex-wrap:wrap; gap:12px; margin-top:12px; color:#849080; font-size:11px; }
+      .empty { padding:24px; border:1px dashed #ffffff24; border-radius:14px; color:#bac4b5; background:#19221b91; font-size:14px; line-height:1.6; }
+      .note { margin-top:22px; padding:16px 18px; border:1px solid #b6e27b21; border-radius:14px; color:#aab5a7; background:#b6e27b08; font-size:12px; line-height:1.7; }
+      .note strong { color:#dce5d4; }
+      .note a { color:var(--green); text-underline-offset:3px; }
+      .diagnostics { margin-top:16px; border:1px solid #ffffff16; border-radius:13px; background:#121a14b8; color:#aeb9aa; font-size:12px; }
+      .diagnostics summary { padding:13px 15px; color:#c6cfc2; cursor:pointer; font-weight:600; }
+      .diagnostics-body { padding:0 15px 15px; }
+      .diagnostics-top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:9px; }
+      .diagnostics-top p { margin:0; color:#899587; font-size:11px; }
+      .copy-log { height:32px; padding:0 11px; font-size:11px; }
+      .diagnostic-log { margin:0; padding:12px; border-radius:9px; color:#d3dccf; background:#0c120d; font:11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
+      .map-panel { margin:20px 0 16px; overflow:hidden; border:1px solid var(--line); border-radius:16px; background:#19221b; }
+      .map-panel[hidden] { display:none; }
+      .map-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 17px; }
+      .map-heading h3 { margin:0; font:600 15px 'Manrope',sans-serif; }
+      .map-heading span { color:#929e90; font-size:11px; }
+      #advisory-map { width:100%; height:390px; background:#18231c; }
+      .map-footnote { margin:0; padding:10px 15px; color:#929e90; font-size:11px; line-height:1.5; }
+      .maplibregl-ctrl-group { overflow:hidden; border:1px solid #ffffff24 !important; border-radius:9px !important; }
+      .maplibregl-ctrl-attrib { font-size:10px !important; }
+      .risk-summary { margin:0 0 18px; padding:20px 22px; border:1px solid #ffffff20; border-left:4px solid #b6e27b; border-radius:15px; background:#19221b; }
+      .risk-summary[data-level="2"] { border-left-color:#c7d66a; }
+      .risk-summary[data-level="3"] { border-left-color:#f0c75c; }
+      .risk-summary[data-level="4"] { border-left-color:#ff9b54; }
+      .risk-summary[data-level="5"] { border-left-color:#ff655d; }
+      .risk-top { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+      .risk-kicker { color:#aab5a7; font-size:10px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; }
+      .risk-top strong { color:#dce5d4; font-size:12px; }
+      .risk-summary h3 { margin:10px 0 5px; font:650 18px 'Manrope',sans-serif; }
+      .risk-summary p { margin:0; color:#b1bbae; font-size:13px; line-height:1.6; }
+      .risk-summary small { display:block; margin-top:11px; color:#899587; font-size:11px; line-height:1.5; }
+      .firms-warning { width:min(440px,calc(100% - 30px)); padding:24px; border:1px solid #ffffff25; border-radius:17px; color:#f4f5ef; background:#172019; box-shadow:0 25px 80px #0009; }
+      .firms-warning::backdrop { background:#000b; backdrop-filter:blur(3px); }
+      .firms-warning h2 { margin:0 0 10px; font:700 20px 'Manrope',sans-serif; }
+      .firms-warning p { margin:0; color:#c1c9bd; font-size:14px; line-height:1.6; }
+      .warning-actions { display:flex; justify-content:flex-end; gap:9px; margin-top:20px; }
+      .warning-actions button { height:39px; padding:0 13px; }
+      @media(max-width:480px) { .warning-actions { flex-direction:column-reverse; } .warning-actions button { width:100%; } }
+      footer { display:flex; justify-content:space-between; gap:14px; padding:18px clamp(20px,6vw,88px); border-top:1px solid var(--line); color:#82907f; font-size:11px; }
+      footer a { color:#aab5a7; text-decoration:none; }
+      footer a:hover { color:var(--green); }
+      @media(max-width:620px) { .topbar { height:66px; } main { padding-top:40px; } .search-card { padding:15px; } .search-row { flex-direction:column; } .search-row button { width:100%; } .actions button { flex:1; } .results-head { align-items:flex-start; flex-direction:column; } footer { font-size:10px; } .mode-picker { margin-left:8px; padding:0 6px; } .mode-picker select { max-width:82px; } }
+      html.light-mode { color-scheme:light; --bg:#f4f6f0; --panel:#fff; --panel2:#edf1e9; --muted:#596455; --white:#1d271d; --green:#5a8428; --line:#21351d26; }
+      html.light-mode body { background:radial-gradient(ellipse at 80% 0%,#e4eddb 0%,#f5f7f2 52%,#edf1e8 100%); color:#1d271d; }
+      html.light-mode .topbar, html.light-mode footer { background:#f7f9f4d9; }
+      html.light-mode .back-link, html.light-mode footer a, html.light-mode .search-label, html.light-mode .map-heading h3, html.light-mode h2 { color:#263424; }
+      html.light-mode .mode-picker { color:#273522; border-color:#24341e35; background:#fff; }
+      html.light-mode .search-card, html.light-mode .alert-card, html.light-mode .map-panel, html.light-mode .diagnostics, html.light-mode .firms-warning { background:#ffffffdb; }
+      html.light-mode .risk-summary { background:#ffffffdb; }
+      html.light-mode .risk-kicker, html.light-mode .risk-top strong, html.light-mode .risk-summary h3 { color:#263424; }
+      html.light-mode .risk-summary p, html.light-mode .risk-summary small { color:#4c5948; }
+      html.light-mode input { color:#1d271d; border-color:#26351f35; background:#fff; }
+      html.light-mode .search-hint, html.light-mode .updated, html.light-mode .severity, html.light-mode .alert-time, html.light-mode .map-heading span, html.light-mode .map-footnote, html.light-mode .diagnostics-top p { color:#64705f; }
+      html.light-mode .lede, html.light-mode .alert-card p, html.light-mode .note, html.light-mode .diagnostics, html.light-mode .firms-warning p { color:#4c5948; }
+      html.light-mode .alert-card h3, html.light-mode .firms-warning h2 { color:#263424; }
+      html.light-mode .empty { color:#43513f; background:#ffffffaa; }
+      html.light-mode .note { background:#e7efde; }
+      html.light-mode .diagnostic-log { color:#263424; background:#eff2eb; }
+      html.light-mode .maplibregl-ctrl-attrib { color:#283425; background:#ffffffd9; }
+      html.light-mode .suggestions { background:#fff; }
+      html.light-mode .suggestion { color:#263424; }
+      html.light-mode .suggestion:hover, html.light-mode .suggestion[aria-selected="true"] { color:#263424; background:#edf3e7; }
+      html.light-mode .suggestion small { color:#667360; }
+      html.light-mode .mode-picker svg { color:#435b32; }
+      html.red-light-mode { color-scheme:dark; --bg:#050000; --panel:#120303; --panel2:#1b0505; --muted:#a13a3a; --white:#bd4b4b; --green:#e04747; --line:#571414; }
+      html.red-light-mode body { background:#040000 !important; color:#bd4b4b !important; }
+      html.red-light-mode body * { color:#bd4b4b !important; border-color:#571414 !important; box-shadow:none !important; text-shadow:none !important; }
+      html.red-light-mode .topbar, html.red-light-mode footer, html.red-light-mode .search-card, html.red-light-mode .alert-card, html.red-light-mode .empty, html.red-light-mode .note, html.red-light-mode .diagnostics, html.red-light-mode .diagnostic-log { background:#100202 !important; }
+      html.red-light-mode .risk-summary { background:#100202 !important; }
+      html.red-light-mode .mode-picker { color:#d45b5b !important; background:#180303 !important; border-color:#8b2929 !important; box-shadow:inset 0 1px #ff777712,0 0 14px #ad222218 !important; }
+      html.red-light-mode .mode-picker svg { color:#ec4545 !important; }
+      html.red-light-mode .mode-picker::after { border-color:#e04747 !important; }
+      html.red-light-mode input { color:#d45b5b !important; background:#050000 !important; }
+      html.red-light-mode button { color:#d45b5b !important; background:#210505 !important; }
+      html.red-light-mode .status { background:#100202 !important; }
+      html.red-light-mode .status::before, html.red-light-mode .tag::before { background:#8b1717 !important; box-shadow:none !important; }
+      html.red-light-mode .alert-card { border-left-color:#661414 !important; }
+      html.red-light-mode .suggestions, html.red-light-mode .map-panel, html.red-light-mode .firms-warning { background:#0b0101 !important; }
+      html.red-light-mode .suggestion[aria-selected="true"], html.red-light-mode .suggestion:hover { background:#1a0303 !important; }
+      html.red-light-mode #advisory-map { filter:grayscale(1) sepia(1) saturate(7) hue-rotate(315deg) brightness(.68); }
+      html.red-light-mode .maplibregl-ctrl button { filter:grayscale(1) sepia(1) saturate(7) hue-rotate(315deg) brightness(.7); }
+      html.red-light-mode .maplibregl-ctrl-attrib { background:#080101dd !important; }
+      html.theme-transition, html.theme-transition body, html.theme-transition body * { transition: color 2.5s ease, background 2.5s ease, border-color 2.5s ease, box-shadow 2.5s ease, filter 2.5s ease !important; }
+      @media(prefers-reduced-motion:reduce) { html.theme-transition, html.theme-transition body, html.theme-transition body * { transition-duration:2.5s !important; } }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Trail Advisor home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19 10.2 6l3.1 6.3 1.7-3.4L20 19H4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m8.3 10 1.9 2 1.8-1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Trail Advisor</a>
+      <div><a class="back-link" href="index.html">Home</a><a class="back-link" href="explorer.html" style="margin-left:16px">Explore map</a><label class="mode-picker" title="Display mode"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 13h10l5 3v2H8l-4-2v-3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 13V9.5a2.5 2.5 0 0 0-5 0V13m10 3 2-1.5M4 13l-2-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M9.5 9.5h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><select id="theme-mode" aria-label="Color mode"><option value="light">Light mode</option><option value="dark">Dark mode</option><option value="red">Red mode 🔦</option></select></label></div>
+    </header>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <main id="main-content" tabindex="-1">
+      <p class="eyebrow">Know before you go</p>
+      <h1>Current advisories</h1>
+      <p class="lede">Check active weather and fire-weather alerts near your trail. Search a place or address, or choose your location. You can also let your browser share your current location.</p>
+      <section class="search-card" aria-label="Find advisories for a location">
+        <label class="search-label" for="location">Location</label>
+        <form id="search-form">
+          <div class="search-row">
+            <div class="input-wrap">
+              <svg class="pin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="1.7"/></svg>
+              <input id="location" name="location" type="search" placeholder="City, address, or ZIP code" autocomplete="street-address" role="combobox" aria-autocomplete="list" aria-controls="location-suggestions" aria-expanded="false" required />
+              <div class="suggestions" id="location-suggestions" role="listbox" aria-label="Suggested locations" hidden></div>
+            </div>
+            <button id="search-button" type="submit">Find advisories</button>
+          </div>
+        </form>
+        <p class="search-hint">Suggestions appear as you type. Your text is sent to Photon, an OpenStreetMap-based search service.</p>
+        <div class="actions">
+          <button class="secondary" id="use-location" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Use my location</button>
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite">Advisory lookup currently covers the United States and territories.</p>
+      </section>
+      <section class="results" aria-live="polite" aria-labelledby="results-title">
+        <div class="results-head"><h2 id="results-title">Alerts near you</h2><span class="updated" id="updated"></span></div>
+        <section class="risk-summary" id="risk-summary" aria-live="polite" hidden>
+          <div class="risk-top"><span class="risk-kicker">NWS alert signal</span><strong id="risk-score"></strong></div>
+          <h3 id="risk-title"></h3><p id="risk-copy"></p>
+          <small>This is a plain-language summary of active NWS alert severity near your selected point, not a trail-specific forecast or a safety guarantee.</small>
+        </section>
+        <section class="map-panel" id="map-panel" aria-label="Map of advisory areas" hidden>
+          <div class="map-heading"><h3>Affected alert areas</h3><span id="map-count"></span></div>
+          <div id="advisory-map" role="img" aria-label="Map highlighting National Weather Service alert boundaries"></div>
+          <p class="map-footnote" id="map-footnote">Highlighted outlines show affected alert boundaries supplied by NWS.</p>
+        </section>
+        <div class="cards" id="cards"><div class="empty">Enter a location to see active National Weather Service advisories for that area.</div></div>
+      </section>
+      <aside class="note"><strong>Fire data:</strong> This demo includes NWS fire-weather alerts such as Red Flag Warnings. It does not show individual fire perimeters, evacuation orders, or satellite fire detections. Explore current satellite detections on <a href="https://firms.modaps.eosdis.nasa.gov/map/" id="firms-link" target="_blank" rel="noreferrer">NASA FIRMS</a>. Always follow instructions from local emergency officials.<br/><strong>Location search:</strong> As you type, suggestions are requested from Photon, a public OpenStreetMap-based geocoder. Its demo service asks for reasonable use and offers no availability guarantee.</aside>
+      <details class="diagnostics" id="diagnostics">
+        <summary>Lookup diagnostics · <span id="diagnostic-count">0 events</span></summary>
+        <div class="diagnostics-body">
+          <div class="diagnostics-top"><p>Shows service, stage, status code, and error details. Location coordinates and search text are not recorded.</p><button class="secondary copy-log" id="copy-log" type="button">Copy report</button></div>
+          <pre class="diagnostic-log" id="diagnostic-log">No lookups recorded in this page session.</pre>
+        </div>
+      </details>
+    </main>
+    <dialog class="firms-warning" id="firms-warning" aria-labelledby="firms-warning-title" aria-describedby="firms-warning-text">
+      <h2 id="firms-warning-title">You’re about to be flashbanged</h2>
+      <p id="firms-warning-text">This page may open a very bright white screen. Continue and Trail Advisor will fade to Light mode before opening it.</p>
+      <div class="warning-actions"><button class="secondary" id="cancel-firms" type="button">Stay here</button><button id="continue-firms" type="button">Continue and adjust my eyes</button></div>
+    </dialog>
+    <footer><span>Trail Advisor · Demo</span><span><a href="https://www.weather.gov/documentation/services-web-alerts" target="_blank" rel="noreferrer">NWS alerts</a> · <a href="https://photon.komoot.io/" target="_blank" rel="noreferrer">Photon search</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap data</a></span></footer>
+    <script>
+      const form = document.getElementById('search-form');
+      const input = document.getElementById('location');
+      const searchButton = document.getElementById('search-button');
+      const locationButton = document.getElementById('use-location');
+      const statusLine = document.getElementById('status');
+      const cards = document.getElementById('cards');
+      const updated = document.getElementById('updated');
+      const suggestions = document.getElementById('location-suggestions');
+      const mapPanel = document.getElementById('map-panel');
+      const searchButtonText = searchButton.textContent;
+      const firePattern = /fire|red flag|smoke|wildfire|burn ban/i;
+      const diagnosticEntries = [];
+      const suggestionCache = new Map();
+      let selectedLocation = null;
+      let suggestionTimer = null;
+      let suggestionRequest = 0;
+      let selectedSuggestionIndex = -1;
+      let advisoryMap = null;
+      let mapReady = false;
+      let displayedMapFeatures = [];
+
+      function setStatus(message, mode = 'default') {
+        statusLine.textContent = message;
+        statusLine.className = `status ${mode}`;
+      }
+
+      function logDiagnostic(service, stage, code, detail = '') {
+        const safeDetail = String(detail).replace(/-?\d{1,3}\.\d+\s*,\s*-?\d{1,3}\.\d+/g, '[coordinates omitted]');
+        diagnosticEntries.push({ time: new Date().toISOString(), service, stage, code, detail: safeDetail });
+        document.getElementById('diagnostic-count').textContent = `${diagnosticEntries.length} ${diagnosticEntries.length === 1 ? 'event' : 'events'}`;
+        document.getElementById('diagnostic-log').textContent = diagnosticEntries.map(entry => `${entry.time} | ${entry.service} | ${entry.stage} | ${entry.code}${entry.detail ? ` | ${entry.detail}` : ''}`).join('\n');
+      }
+
+      function errorDetail(payload, fallback) {
+        if (!payload || typeof payload !== 'object') return fallback;
+        return payload.detail || payload.title || payload.message || fallback;
+      }
+
+      function setBusy(isBusy, message) {
+        searchButton.disabled = isBusy;
+        locationButton.disabled = isBusy;
+        searchButton.textContent = isBusy ? message : searchButtonText;
+      }
+
+      function showEmpty(message) {
+        cards.replaceChildren();
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = message;
+        cards.append(empty);
+        updated.textContent = '';
+      }
+
+      function formatDate(value) {
+        if (!value) return 'Not specified';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return 'Not specified';
+        return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+      }
+
+      function locationLabel(feature) {
+        const p = feature.properties || {};
+        return [p.name || p.street, p.city || p.county, p.state, p.postcode, p.country]
+          .filter((value, index, all) => value && all.indexOf(value) === index)
+          .join(', ') || 'Unknown location';
+      }
+
+      function closeSuggestions() {
+        suggestions.hidden = true;
+        suggestions.replaceChildren();
+        input.setAttribute('aria-expanded', 'false');
+        input.removeAttribute('aria-activedescendant');
+        selectedSuggestionIndex = -1;
+      }
+
+      function selectSuggestion(feature) {
+        selectedLocation = feature;
+        input.value = locationLabel(feature);
+        closeSuggestions();
+        input.focus();
+      }
+
+      function renderSuggestions(features) {
+        suggestions.replaceChildren();
+        selectedSuggestionIndex = -1;
+        if (!features.length) {
+          const empty = document.createElement('div');
+          empty.className = 'suggestion';
+          empty.textContent = 'No matching places found';
+          suggestions.append(empty);
+        } else {
+          features.forEach((feature, index) => {
+            const option = document.createElement('button');
+            option.type = 'button';
+            option.className = 'suggestion';
+            option.id = `location-option-${index}`;
+            option.setAttribute('role', 'option');
+            option.setAttribute('aria-selected', 'false');
+            const p = feature.properties || {};
+            const title = document.createElement('strong');
+            title.textContent = p.name || p.street || 'Place';
+            const subtitle = document.createElement('small');
+            subtitle.textContent = [p.city || p.county, p.state, p.postcode, p.country]
+              .filter((value, index, all) => value && all.indexOf(value) === index).join(' · ');
+            option.append(title, subtitle);
+            option.addEventListener('mousedown', event => event.preventDefault());
+            option.addEventListener('click', () => selectSuggestion(feature));
+            suggestions.append(option);
+          });
+        }
+        suggestions.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+      }
+
+      async function requestPhoton(query, limit = 5) {
+        const url = new URL('https://photon.komoot.io/api/');
+        url.search = new URLSearchParams({ q: query, limit: String(limit), lang: 'en' });
+        const response = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null);
+          throw new Error(`Location search returned HTTP ${response.status}: ${errorDetail(payload, 'Photon search failed.')}`);
+        }
+        const data = await response.json();
+        return data.features || [];
+      }
+
+      function updateSuggestions() {
+        clearTimeout(suggestionTimer);
+        const query = input.value.trim();
+        selectedLocation = null;
+        const requestId = ++suggestionRequest;
+        if (query.length < 2) {
+          closeSuggestions();
+          return;
+        }
+        suggestionTimer = window.setTimeout(async () => {
+          const cacheKey = query.toLowerCase();
+          try {
+            const features = suggestionCache.has(cacheKey)
+              ? suggestionCache.get(cacheKey)
+              : await requestPhoton(query, 5);
+            suggestionCache.set(cacheKey, features);
+            if (requestId === suggestionRequest && input.value.trim() === query) renderSuggestions(features);
+          } catch {
+            if (requestId === suggestionRequest) closeSuggestions();
+          }
+        }, 450);
+      }
+
+      function geometryCoordinates(geometry, output = []) {
+        if (!geometry) return output;
+        const walk = value => {
+          if (Array.isArray(value) && typeof value[0] === 'number' && typeof value[1] === 'number') output.push(value);
+          else if (Array.isArray(value)) value.forEach(walk);
+        };
+        if (geometry.type === 'GeometryCollection') geometry.geometries.forEach(item => geometryCoordinates(item, output));
+        else walk(geometry.coordinates);
+        return output;
+      }
+
+      function ensureAlertMap() {
+        if (advisoryMap) return advisoryMap;
+        if (!window.maplibregl) return null;
+        advisoryMap = new maplibregl.Map({
+          container: 'advisory-map',
+          style: 'https://tiles.openfreemap.org/styles/liberty',
+          center: [-98.5, 39.8],
+          zoom: 3.2,
+          attributionControl: true,
+          cooperativeGestures: true
+        });
+        advisoryMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+        advisoryMap.on('error', () => {
+          if (!mapReady) {
+            document.getElementById('map-footnote').textContent = 'The basemap could not load. Alert information is still available in the cards below.';
+            document.getElementById('advisory-map').hidden = true;
+          }
+        });
+        advisoryMap.on('load', () => {
+          mapReady = true;
+          advisoryMap.addSource('alert-areas', { type: 'geojson', data: { type: 'FeatureCollection', features: displayedMapFeatures } });
+          advisoryMap.addLayer({
+            id: 'alert-area-fill', type: 'fill', source: 'alert-areas',
+            paint: { 'fill-color': ['match', ['get', 'severity'], 'Extreme', '#ef3737', 'Severe', '#ee6637', 'Moderate', '#dfaa35', '#df663d'], 'fill-opacity': 0.25 }
+          });
+          advisoryMap.addLayer({
+            id: 'alert-area-outline', type: 'line', source: 'alert-areas',
+            paint: { 'line-color': ['match', ['get', 'severity'], 'Extreme', '#d02020', 'Severe', '#d84922', 'Moderate', '#bb8b18', '#d84922'], 'line-width': 3 }
+          });
+          fitAlertMap();
+        });
+        return advisoryMap;
+      }
+
+      function fitAlertMap(features = displayedMapFeatures) {
+        if (!advisoryMap || !mapReady || !features.length) return;
+        const points = features.flatMap(feature => geometryCoordinates(feature.geometry));
+        if (!points.length) return;
+        const bounds = new maplibregl.LngLatBounds();
+        points.forEach(point => bounds.extend([point[0], point[1]]));
+        advisoryMap.fitBounds(bounds, { padding: 46, maxZoom: 9, duration: 650 });
+      }
+
+      function updateAlertMap(features, center) {
+        const mappable = features.filter(feature => feature.geometry && geometryCoordinates(feature.geometry).length > 0);
+        const unmappedCount = features.length - mappable.length;
+        mapPanel.hidden = false;
+        document.getElementById('map-count').textContent = `${mappable.length} mapped${unmappedCount ? ` · ${unmappedCount} without boundary data` : ''}`;
+        const mapElement = document.getElementById('advisory-map');
+        const footnote = document.getElementById('map-footnote');
+        if (!mappable.length) {
+          displayedMapFeatures = [];
+          if (advisoryMap && mapReady) advisoryMap.getSource('alert-areas').setData({ type: 'FeatureCollection', features: [] });
+          mapElement.hidden = true;
+          footnote.textContent = 'NWS did not include boundary geometry for these alerts, so there is no reliable outline to show.';
+          return;
+        }
+        mapElement.hidden = false;
+        footnote.textContent = `Outlines show the affected areas defined in ${mappable.length === 1 ? 'the NWS alert' : 'NWS alerts'}. ${unmappedCount ? `${unmappedCount} alert${unmappedCount === 1 ? '' : 's'} did not include map geometry.` : ''}`;
+        displayedMapFeatures = mappable.map(feature => ({
+          type: 'Feature',
+          geometry: feature.geometry,
+          properties: { event: feature.properties?.event || 'Weather alert', severity: feature.properties?.severity || 'Unknown' }
+        }));
+        const map = ensureAlertMap();
+        if (!map) {
+          footnote.textContent = 'The map could not load in this browser. Alert details remain available below.';
+          mapElement.hidden = true;
+          return;
+        }
+        if (center && !mapReady) map.jumpTo({ center: [Number(center.lon), Number(center.lat)], zoom: 7 });
+        else if (center && mapReady) map.jumpTo({ center: [Number(center.lon), Number(center.lat)], zoom: 7 });
+        if (mapReady) {
+          map.getSource('alert-areas').setData({ type: 'FeatureCollection', features: displayedMapFeatures });
+          fitAlertMap();
+        }
+      }
+
+      function renderAlert(feature) {
+        const p = feature.properties || {};
+        const severity = (p.severity || 'Unknown').toLowerCase();
+        const event = p.event || p.headline || 'Weather alert';
+        const isFire = firePattern.test(event);
+        const article = document.createElement('article');
+        article.className = `alert-card sev-${severity}`;
+
+        const top = document.createElement('div');
+        top.className = 'alert-top';
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = isFire ? 'Fire weather' : 'Weather';
+        const severityLabel = document.createElement('span');
+        severityLabel.className = 'severity';
+        severityLabel.textContent = `${p.severity || 'Severity unknown'}${p.urgency ? ` · ${p.urgency}` : ''}`;
+        top.append(tag, severityLabel);
+
+        const title = document.createElement('h3');
+        title.textContent = event;
+        const description = document.createElement('p');
+        description.textContent = p.headline || p.description || p.instruction || 'See the source alert for more information.';
+        const time = document.createElement('div');
+        time.className = 'alert-time';
+        const area = document.createElement('span');
+        area.textContent = p.areaDesc || 'Area not specified';
+        const expires = document.createElement('span');
+        expires.textContent = `Expires ${formatDate(p.ends || p.expires)}`;
+        time.append(area, expires);
+        article.append(top, title, description, time);
+
+        if (feature.geometry) {
+          const focusButton = document.createElement('button');
+          focusButton.type = 'button';
+          focusButton.className = 'secondary focus-alert';
+          focusButton.textContent = 'Show affected area on map';
+          focusButton.addEventListener('click', () => {
+            const focusFeature = {
+              type: 'Feature', geometry: feature.geometry,
+              properties: { event, severity: p.severity || 'Unknown' }
+            };
+            displayedMapFeatures = [focusFeature];
+            document.getElementById('map-count').textContent = 'Focused alert area';
+            if (!advisoryMap) ensureAlertMap();
+            if (mapReady) {
+              advisoryMap.getSource('alert-areas').setData({ type: 'FeatureCollection', features: displayedMapFeatures });
+              fitAlertMap();
+            }
+            mapPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+          article.append(focusButton);
+        }
+
+        if (p.web) {
+          const source = document.createElement('a');
+          source.href = p.web;
+          source.target = '_blank';
+          source.rel = 'noreferrer';
+          source.className = 'official-alert-link';
+          source.textContent = 'Open official alert';
+          source.style.cssText = 'display:inline-block;margin-top:12px;color:#b6e27b;font-size:12px;text-underline-offset:3px';
+          article.append(source);
+        }
+        return article;
+      }
+
+      async function loadAlerts(lat, lon, placeName) {
+        setBusy(true, 'Checking…');
+        setStatus(`Location found: ${placeName}. Checking active advisories…`, 'loading');
+        mapPanel.hidden = true;
+        showEmpty('Loading advisories…');
+        try {
+          const url = new URL('https://api.weather.gov/alerts/active');
+          // NWS rejects point coordinates with more than four decimals (HTTP 400).
+          url.searchParams.set('point', `${Number(lat).toFixed(4)},${Number(lon).toFixed(4)}`);
+          let response;
+          try {
+            response = await fetch(url, { headers: { Accept: 'application/geo+json' } });
+          } catch (error) {
+            logDiagnostic('NWS', 'active alerts', 'Network/CORS error', error.message || 'Request failed');
+            throw new Error('Could not reach the National Weather Service. Check your connection and try again.');
+          }
+          const data = await response.json().catch(() => null);
+          if (!response.ok) {
+            const detail = errorDetail(data, response.status === 404 ? 'No alert data for this location.' : 'The weather service rejected the request.');
+            logDiagnostic('NWS', 'active alerts', `HTTP ${response.status}`, detail);
+            throw new Error(response.status === 404 ? 'The weather service has no alert data for this location.' : `The weather service returned an error (${response.status}): ${detail}`);
+          }
+          if (!data || !Array.isArray(data.features)) {
+            logDiagnostic('NWS', 'active alerts', `HTTP ${response.status}`, 'Unexpected response format');
+            throw new Error('The weather service returned an unexpected response. Please try again.');
+          }
+          logDiagnostic('NWS', 'active alerts', `HTTP ${response.status}`, 'Response received');
+          const features = (data.features || []).filter(feature => {
+            const p = feature.properties || {};
+            return !p.status || p.status === 'Actual';
+          });
+          updateRiskSummary(features);
+          cards.replaceChildren();
+          if (features.length) updateAlertMap(features, { lat, lon });
+          else mapPanel.hidden = true;
+          if (!features.length) {
+            showEmpty(`No active NWS alerts were returned for ${placeName}. Conditions can change quickly; check local emergency sources before heading out.`);
+            setStatus(`Location found: ${placeName}. No active NWS alerts were returned.`, 'success');
+          } else {
+            features.sort((a, b) => {
+              const order = { Extreme: 0, Severe: 1, Moderate: 2, Minor: 3, Unknown: 4 };
+              return (order[a.properties?.severity] ?? 4) - (order[b.properties?.severity] ?? 4);
+            });
+            features.forEach(feature => cards.append(renderAlert(feature)));
+            setStatus(`${features.length} active ${features.length === 1 ? 'advisory' : 'advisories'} found near ${placeName}.`, 'success');
+          }
+          updated.textContent = `Checked ${new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(new Date())}`;
+          document.getElementById('results-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (error) {
+          showEmpty('Advisories could not be loaded. Please try again or visit the National Weather Service directly.');
+          setStatus(error.message || 'Unable to load advisories. Check your connection and try again.', 'error');
+          document.getElementById('results-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      function updateRiskSummary(features) {
+        const panel = document.getElementById('risk-summary');
+        const score = document.getElementById('risk-score');
+        const title = document.getElementById('risk-title');
+        const copy = document.getElementById('risk-copy');
+        if (!features.length) {
+          score.textContent = '0 / 5 · None returned';
+          panel.dataset.level = '0';
+          title.textContent = 'No active NWS alerts returned';
+          copy.textContent = 'No current alerts were returned for this point. Check local forecasts and land-manager notices too; conditions can change quickly.';
+          panel.hidden = false;
+          return;
+        }
+        const rank = { Extreme: 5, Severe: 4, Moderate: 3, Minor: 2, Unknown: 1 };
+        const highest = features.reduce((best, item) => (rank[item.properties?.severity] || 1) > (rank[best.properties?.severity] || 1) ? item : best, features[0]);
+        const severity = highest.properties?.severity || 'Unknown';
+        const level = rank[severity] || 1;
+        const event = highest.properties?.event || 'weather alert';
+        score.textContent = `${level} / 5 · ${severity}`;
+        panel.dataset.level = String(level);
+        const messages = {
+          5: ['Very high alert activity nearby', `An NWS ${event} is rated Extreme. Consider postponing or choosing a route outside the affected area, and follow local emergency instructions.`],
+          4: ['High alert activity nearby', `An NWS ${event} is rated Severe. Review the alert details, consider an alternate route or timing, and be ready to change plans.`],
+          3: ['Elevated conditions nearby', `An NWS ${event} is rated Moderate. Check the alert details, prepare for the stated conditions, and keep an alternate plan.`],
+          2: ['Advisory-level conditions nearby', `An NWS ${event} is rated Minor. Read the alert details and monitor conditions before and during your trip.`],
+          1: ['Alert severity is not specified', `An NWS ${event} is active nearby. Open the alert details and follow guidance from local officials.`]
+        };
+        [title.textContent, copy.textContent] = messages[level];
+        panel.hidden = false;
+      }
+
+      async function geocode(query) {
+        try {
+          const features = await requestPhoton(query, 1);
+          logDiagnostic('Photon', 'location search', 'HTTP 200', features.length ? 'Location match found' : 'No matching location');
+          if (!features.length) throw new Error('We could not find that place. Try a nearby town, address, or ZIP code.');
+          return features[0];
+        } catch (error) {
+          const detail = error.message || 'Location search is temporarily unavailable.';
+          logDiagnostic('Photon', 'location search', 'Request error', detail);
+          throw new Error(detail);
+        }
+      }
+
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const query = input.value.trim();
+        if (!query) return;
+        setBusy(true, 'Finding…');
+        setStatus('Searching for that location…', 'loading');
+        try {
+          const result = selectedLocation || await geocode(query);
+          const [lon, lat] = result.geometry.coordinates;
+          await loadAlerts(lat, lon, locationLabel(result));
+        } catch (error) {
+          showEmpty('Enter a different place to check nearby alerts.');
+          setStatus(error.message || 'Location search failed. Please try again.', 'error');
+          setBusy(false);
+        }
+      });
+
+      input.addEventListener('input', updateSuggestions);
+      input.addEventListener('keydown', event => {
+        const options = [...suggestions.querySelectorAll('[role="option"]')];
+        if (event.key === 'Escape') {
+          closeSuggestions();
+        } else if (event.key === 'ArrowDown' && options.length) {
+          event.preventDefault();
+          selectedSuggestionIndex = (selectedSuggestionIndex + 1) % options.length;
+          options.forEach((option, index) => option.setAttribute('aria-selected', String(index === selectedSuggestionIndex)));
+          input.setAttribute('aria-activedescendant', options[selectedSuggestionIndex].id);
+        } else if (event.key === 'ArrowUp' && options.length) {
+          event.preventDefault();
+          selectedSuggestionIndex = (selectedSuggestionIndex - 1 + options.length) % options.length;
+          options.forEach((option, index) => option.setAttribute('aria-selected', String(index === selectedSuggestionIndex)));
+          input.setAttribute('aria-activedescendant', options[selectedSuggestionIndex].id);
+        } else if (event.key === 'Enter' && selectedSuggestionIndex >= 0 && options[selectedSuggestionIndex]) {
+          event.preventDefault();
+          options[selectedSuggestionIndex].click();
+        }
+      });
+      input.addEventListener('blur', () => window.setTimeout(closeSuggestions, 140));
+
+      locationButton.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+          setStatus('This browser does not provide location access. Enter a place above instead.', 'error');
+          return;
+        }
+        setBusy(true, 'Locating…');
+        setStatus('Waiting for your location permission…', 'loading');
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            logDiagnostic('Browser location', 'permission', 'Success', 'Coordinates received; values omitted');
+            loadAlerts(position.coords.latitude, position.coords.longitude, 'your location');
+          },
+          error => {
+            setBusy(false);
+            const message = error.code === error.PERMISSION_DENIED ? 'Location permission was not granted. Enter a place above instead.' : 'We could not get your location. Check your device settings or enter a place above.';
+            logDiagnostic('Browser location', 'permission', `Geolocation code ${error.code}`, message);
+            setStatus(message, 'error');
+          },
+          { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 }
+        );
+      });
+
+      document.getElementById('copy-log').addEventListener('click', async () => {
+        const report = diagnosticEntries.length
+          ? diagnosticEntries.map(entry => `${entry.time} | ${entry.service} | ${entry.stage} | ${entry.code}${entry.detail ? ` | ${entry.detail}` : ''}`).join('\n')
+          : 'No lookups recorded in this page session.';
+        try {
+          await navigator.clipboard.writeText(report);
+          document.getElementById('copy-log').textContent = 'Copied';
+        } catch {
+          const temporary = document.createElement('textarea');
+          temporary.value = report;
+          temporary.style.position = 'fixed';
+          temporary.style.opacity = '0';
+          document.body.append(temporary);
+          temporary.select();
+          document.execCommand('copy');
+          temporary.remove();
+          document.getElementById('copy-log').textContent = 'Copied';
+        }
+        window.setTimeout(() => { document.getElementById('copy-log').textContent = 'Copy report'; }, 1800);
+      });
+
+      const firmsWarning = document.getElementById('firms-warning');
+      let pendingBrightUrl = '';
+      let pendingBrightLabel = 'Open bright page';
+      function transitionEyesBeforeExternal(url, openInNewTab = true, destinationLabel = 'the external page') {
+        const redMode = document.documentElement.classList.contains('red-light-mode');
+        if (!redMode) {
+          if (openInNewTab) {
+            const destinationWindow = window.open(url, '_blank');
+            if (destinationWindow) destinationWindow.opener = null;
+            else setStatus('Your browser blocked the new tab. Allow pop-ups and try opening the link again.', 'error');
+          }
+          else window.location.assign(url);
+          return;
+        }
+        themeMode.disabled = true;
+        document.documentElement.classList.add('theme-transition');
+        document.documentElement.classList.remove('red-light-mode');
+        document.documentElement.classList.add('light-mode');
+        document.documentElement.dataset.theme = 'light';
+        themeMode.value = 'light';
+        document.querySelector('meta[name="theme-color"]').content = '#f4f6f0';
+        window.setTimeout(() => {
+          document.documentElement.classList.remove('theme-transition');
+          themeMode.disabled = false;
+          setThemeMode('light');
+          if (!openInNewTab) {
+            window.location.assign(url);
+          } else {
+            const destinationWindow = window.open(url, '_blank');
+            if (destinationWindow) {
+              destinationWindow.opener = null;
+            } else {
+              setStatus(`Your eyes are adjusted, but the browser blocked ${destinationLabel}. Allow pop-ups, then use this link:`, 'error');
+              const retryLink = document.createElement('a');
+              retryLink.href = url;
+              retryLink.target = '_blank';
+              retryLink.rel = 'noopener noreferrer';
+              retryLink.textContent = `Open ${destinationLabel}`;
+              retryLink.style.cssText = 'margin-left:7px;color:#5a8428;text-decoration:underline';
+              statusLine.append(retryLink);
+            }
+          }
+        }, 2500);
+      }
+
+      document.addEventListener('click', event => {
+        const externalLink = event.target.closest('a[href]');
+        if (!externalLink || new URL(externalLink.href, location.href).origin === location.origin) return;
+        if (!document.documentElement.classList.contains('red-light-mode')) return;
+        event.preventDefault();
+        if (externalLink.matches('#firms-link, .official-alert-link')) {
+          pendingBrightUrl = externalLink.href;
+          pendingBrightLabel = externalLink.id === 'firms-link' ? 'NASA FIRMS' : 'the official weather alert';
+          document.getElementById('firms-warning-text').textContent = `You’re about to open ${pendingBrightLabel}, which may display a very bright white page. Choose Continue and adjust my eyes to fade this page to Light mode over 2.5 seconds first.`;
+          document.getElementById('continue-firms').textContent = 'Continue and adjust my eyes';
+          firmsWarning.showModal();
+        } else {
+          transitionEyesBeforeExternal(externalLink.href, externalLink.target === '_blank', 'the external page');
+        }
+      });
+      document.getElementById('cancel-firms').addEventListener('click', () => firmsWarning.close());
+      document.getElementById('continue-firms').addEventListener('click', () => {
+        firmsWarning.close();
+        if (pendingBrightUrl) transitionEyesBeforeExternal(pendingBrightUrl, true, pendingBrightLabel);
+      });
+
+      const themeMode = document.getElementById('theme-mode');
+      function setThemeMode(mode) {
+        document.documentElement.dataset.theme = mode;
+        document.documentElement.classList.toggle('red-light-mode', mode === 'red');
+        document.documentElement.classList.toggle('light-mode', mode === 'light');
+        themeMode.value = mode;
+        document.querySelector('meta[name="theme-color"]').content = mode === 'red' ? '#040000' : mode === 'light' ? '#f4f6f0' : '#101611';
+        try {
+          localStorage.setItem('trail-theme', mode);
+          localStorage.setItem('trail-red-light', mode === 'red' ? 'on' : 'off');
+        } catch {}
+      }
+      themeMode.addEventListener('change', () => setThemeMode(themeMode.value));
+      setThemeMode(document.documentElement.dataset.theme || 'dark');
+
+      const mapSelection = new URLSearchParams(location.search);
+      const mapLat = Number(mapSelection.get('lat'));
+      const mapLon = Number(mapSelection.get('lon'));
+      if (Number.isFinite(mapLat) && Number.isFinite(mapLon) && Math.abs(mapLat) <= 90 && Math.abs(mapLon) <= 180) {
+        const place = mapSelection.get('place') || 'selected map location';
+        input.value = place;
+        loadAlerts(mapLat, mapLon, place);
+      }
+    </script>
+  </body>
+</html>
